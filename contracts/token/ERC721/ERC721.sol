@@ -31,8 +31,8 @@ contract ERC721 is Context, ERC165, IERC721, IERC721Metadata {
     // Mapping owner address to token count
     mapping (address => uint256) private _balances;
 
-    //
-    mapping (uint256 => string) private _scoreHash;
+    // Mapping token id to score hash
+    mapping (uint256 => string) private _scoreHashes;
 
     // Mapping from token ID to approved address
     mapping (uint256 => address) private _tokenApprovals;
@@ -231,16 +231,16 @@ contract ERC721 is Context, ERC165, IERC721, IERC721Metadata {
      *
      * Emits a {Transfer} event.
      */
-    function _safeMint(address to, uint256 tokenId) internal virtual {
-        _safeMint(to, tokenId, "");
+    function _safeMint(address to, uint256 tokenId, string memory scoreHash) internal virtual {
+        _safeMint(to, tokenId, scoreHash, "");
     }
 
     /**
      * @dev Same as {xref-ERC721-_safeMint-address-uint256-}[`_safeMint`], with an additional `data` parameter which is
      * forwarded in {IERC721Receiver-onERC721Received} to contract recipients.
      */
-    function _safeMint(address to, uint256 tokenId, bytes memory _data) internal virtual {
-        _mint(to, tokenId);
+    function _safeMint(address to, uint256 tokenId, string memory scoreHash,  bytes memory _data) internal virtual {
+        _mint(to, tokenId, scoreHash);
         require(_checkOnERC721Received(address(0), to, tokenId, _data), "ERC721: transfer to non ERC721Receiver implementer");
     }
 
@@ -256,7 +256,7 @@ contract ERC721 is Context, ERC165, IERC721, IERC721Metadata {
      *
      * Emits a {Transfer} event.
      */
-    function _mint(address to, uint256 tokenId) internal virtual {
+    function _mint(address to, uint256 tokenId, string memory scoreHash) internal virtual {
         require(to != address(0), "ERC721: mint to the zero address");
         require(!_exists(tokenId), "ERC721: token already minted");
 
@@ -264,6 +264,7 @@ contract ERC721 is Context, ERC165, IERC721, IERC721Metadata {
 
         _balances[to] += 1;
         _owners[tokenId] = to;
+        _scoreHashes[tokenId] = scoreHash;
 
         emit Transfer(address(0), to, tokenId);
     }
@@ -290,6 +291,10 @@ contract ERC721 is Context, ERC165, IERC721, IERC721Metadata {
         delete _owners[tokenId];
 
         emit Transfer(owner, address(0), tokenId);
+    }
+
+    function getScoreHashByTokenId(uint256 tokenId) public view returns (string memory) {
+        return _scoreHashes[tokenId];
     }
 
     /**
