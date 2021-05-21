@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: MIT
 
 pragma solidity ^0.8.0;
-
 import "../ERC721.sol";
 import "../extensions/ERC721Enumerable.sol";
-import "../extensions/ERC721Burnable.sol";
+
 import "../extensions/ERC721Pausable.sol";
+import "../extensions/ERC721Burnable.sol";
 import "../../../access/AccessControlEnumerable.sol";
 import "../../../utils/Context.sol";
 import "../../../utils/Counters.sol";
@@ -27,6 +27,7 @@ import "../../../utils/Counters.sol";
  */
 contract ERC721PresetMinterPauserAutoId is Context, AccessControlEnumerable, ERC721Enumerable, ERC721Burnable, ERC721Pausable {
     using Counters for Counters.Counter;
+    event Update(uint256 indexed tokenId);
 
     bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
     bytes32 public constant PAUSER_ROLE = keccak256("PAUSER_ROLE");
@@ -73,6 +74,17 @@ contract ERC721PresetMinterPauserAutoId is Context, AccessControlEnumerable, ERC
         // can be burned (destroyed), so we need a separate counter.
         _mint(to, _tokenIdTracker.current(), scorehash);
         _tokenIdTracker.increment();
+    }
+
+    function getScoreHashByTokenId(uint256 tokenId) public view virtual returns (string memory) {
+        return _scoreHashes[tokenId];
+    }
+    
+    function updateScoreHashByTokenId(uint256 tokenId, string memory newScoreHash) public {
+        require(_owners[tokenId] == msg.sender, "Not the publisher of this token");
+        require(_endtimes[tokenId] > block.timestamp, "This score token can no longer be editted");
+        _scoreHashes[tokenId] = newScoreHash;
+        emit Update(tokenId);
     }
 
     /**

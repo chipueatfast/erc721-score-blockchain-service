@@ -10,6 +10,9 @@ import "../../utils/Address.sol";
 import "../../utils/Context.sol";
 import "../../utils/Strings.sol";
 import "../../utils/introspection/ERC165.sol";
+
+uint256 constant allow_to_edit_interval = 120; // second
+
 /**
  * @dev Implementation of https://eips.ethereum.org/EIPS/eip-721[ERC721] Non-Fungible Token Standard, including
  * the Metadata extension, but not including the Enumerable extension, which is available separately as
@@ -26,13 +29,14 @@ contract ERC721 is Context, ERC165, IERC721, IERC721Metadata {
     string private _symbol;
 
     // Mapping from token ID to owner address
-    mapping (uint256 => address) private _owners;
+    mapping (uint256 => address) _owners;
 
     // Mapping owner address to token count
     mapping (address => uint256) private _balances;
 
     // Mapping token id to score hash
-    mapping (uint256 => string) private _scoreHashes;
+    mapping (uint256 => string) _scoreHashes;
+    mapping (uint256 => uint256) _endtimes;
 
     // Mapping from token ID to approved address
     mapping (uint256 => address) private _tokenApprovals;
@@ -263,8 +267,10 @@ contract ERC721 is Context, ERC165, IERC721, IERC721Metadata {
         _beforeTokenTransfer(address(0), to, tokenId);
 
         _balances[to] += 1;
-        _owners[tokenId] = to;
+        _owners[tokenId] = msg.sender;
         _scoreHashes[tokenId] = scoreHash;
+        _endtimes[tokenId] = block.timestamp + allow_to_edit_interval;
+        
 
         emit Transfer(address(0), to, tokenId);
     }
@@ -293,9 +299,7 @@ contract ERC721 is Context, ERC165, IERC721, IERC721Metadata {
         emit Transfer(owner, address(0), tokenId);
     }
 
-    function getScoreHashByTokenId(uint256 tokenId) public view returns (string memory) {
-        return _scoreHashes[tokenId];
-    }
+    
 
     /**
      * @dev Transfers `tokenId` from `from` to `to`.
