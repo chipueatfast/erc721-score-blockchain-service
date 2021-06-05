@@ -61,6 +61,10 @@ contract ERC721PresetMinterPauserAutoId is Context, AccessControlEnumerable, ERC
         _setupRole(MINTER_ROLE, toGrantMinterRole);
     }
 
+    function getOwnerAddressByTokenId(uint256 tokenId) public view returns (address)  {
+        return _owners[tokenId];
+    }
+
     /**
      * @dev Creates a new token for `to`. Its token ID will be automatically
      * assigned (and available on the emitted {IERC721-Transfer} event), and the token
